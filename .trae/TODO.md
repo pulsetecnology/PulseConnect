@@ -1,0 +1,16 @@
+# TODO:
+
+- [x] 1: Configurar Supabase e criar estrutura do banco de dados com tabelas (user_profiles, jobs, proposals, reviews) (priority: High)
+- [x] 2: Implementar sistema de autenticação Google OAuth via Supabase (priority: High)
+- [x] 3: Criar componentes UI base com design bancário e modo escuro usando Tailwind CSS (priority: High)
+- [x] 11: Corrigir erro de autenticação implementando sistema email/senha como fallback (priority: High)
+- [x] 12: Atualizar AuthContext para suportar autenticação email/senha e Google OAuth (priority: High)
+- [x] 13: Criar componentes de login/registro com email/senha (priority: High)
+- [x] 4: Desenvolver Página Inicial com navegação, jobs em destaque e busca rápida (priority: Medium)
+- [x] 5: Implementar Página de Jobs com listagem, filtros avançados e detalhes (priority: Medium)
+- [x] 6: Criar Página de Freelancers com lista de prestadores, perfis e ranking (priority: Medium)
+- [x] 7: Desenvolver Página de Propostas com envio, gerenciamento e aceite de contratos (priority: Medium)
+- [x] 8: Implementar Página de Perfil com dados pessoais, histórico e plano premium (priority: Medium)
+- [x] 9: Criar Página de Avaliações com sistema de estrelas e comentários (priority: Medium)
+- [x] 14: Adicionar instruções para habilitar Google OAuth no Supabase (priority: Medium)
+- [x] 10: Desenvolver Dashboard Admin com gestão de usuários, jobs e métricas (priority: Low)
