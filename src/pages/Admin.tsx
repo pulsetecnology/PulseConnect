@@ -387,7 +387,7 @@ function Admin() {
           {[
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'users', label: 'Usuários', icon: Users },
-            { id: 'jobs', label: 'Projetos', icon: Briefcase },
+            { id: 'jobs', label: 'Oportunidades', icon: Briefcase },
             { id: 'activity', label: 'Atividades', icon: Activity }
           ].map((tab) => {
             const Icon = tab.icon
@@ -654,14 +654,14 @@ function Admin() {
           </div>
         )}
 
-        {/* Jobs Tab */}
+        {/* Oportunidades Tab */}
         {activeTab === 'jobs' && (
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Projetos Publicados</CardTitle>
+                <CardTitle>Oportunidades Publicadas</CardTitle>
                 <CardDescription>
-                  Monitore e gerencie todos os projetos da plataforma
+                  Monitore e gerencie todas as oportunidades da plataforma
                 </CardDescription>
               </CardHeader>
               <CardContent>

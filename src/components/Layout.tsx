@@ -30,14 +30,45 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const navigation = [
-    { name: 'Início', href: '/', icon: Home },
-    { name: 'Jobs', href: '/jobs', icon: Briefcase },
-    { name: 'Freelancers', href: '/freelancers', icon: Users },
-    { name: 'Propostas', href: '/proposals', icon: FileText },
-    { name: 'Perfil', href: '/profile', icon: User },
-    { name: 'Avaliações', href: '/reviews', icon: Star },
-  ]
+  // Navegação baseada no tipo de usuário
+  const getNavigationItems = () => {
+    const baseItems = [
+      { name: 'Início', href: '/', icon: Home },
+      { name: 'Perfil', href: '/profile', icon: User },
+      { name: 'Propostas', href: '/proposals', icon: FileText },
+      { name: 'Avaliações', href: '/reviews', icon: Star },
+    ]
+
+    // Clientes veem apenas Freelancers (não veem Oportunidades)
+    if (profile?.user_type === 'client') {
+      return [
+        ...baseItems.slice(0, 1), // Início
+        { name: 'Freelancers', href: '/freelancers', icon: Users },
+        ...baseItems.slice(1) // Perfil, Propostas, Avaliações
+      ]
+    }
+    
+    // Freelancers veem apenas Oportunidades (não veem outros Freelancers)
+    if (profile?.user_type === 'freelancer') {
+      return [
+        ...baseItems.slice(0, 1), // Início
+        { name: 'Oportunidades', href: '/jobs', icon: Briefcase },
+        ...baseItems.slice(1) // Perfil, Propostas, Avaliações
+      ]
+    }
+
+    // Admin vê tudo
+    return [
+      { name: 'Início', href: '/', icon: Home },
+      { name: 'Oportunidades', href: '/jobs', icon: Briefcase },
+      { name: 'Freelancers', href: '/freelancers', icon: Users },
+      { name: 'Propostas', href: '/proposals', icon: FileText },
+      { name: 'Perfil', href: '/profile', icon: User },
+      { name: 'Avaliações', href: '/reviews', icon: Star },
+    ]
+  }
+
+  const navigation = getNavigationItems()
 
   const handleSignOut = async () => {
     try {
@@ -133,7 +164,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   {user?.user_metadata?.full_name || user?.email}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                  {profile?.user_type || 'freelancer'}
+                  {profile?.user_type === 'client' ? 'Cliente' : 
+                   profile?.user_type === 'freelancer' ? 'Freelancer' : 
+                   profile?.user_type === 'admin' ? 'Administrador' : 'Usuário'}
                 </p>
               </div>
             </div>
@@ -177,7 +210,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </div>
                   <input
                     type="text"
-                    placeholder="Buscar jobs, freelancers..."
+                    placeholder="Buscar oportunidades, freelancers..."
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
                   />
                 </div>

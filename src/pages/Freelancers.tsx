@@ -34,6 +34,25 @@ interface FilterState {
 
 const Freelancers: React.FC = () => {
   const { user, profile } = useAuth()
+  
+  // Verificar se o usuário é cliente - apenas clientes podem ver freelancers
+  if (profile && profile.user_type !== 'client' && profile.user_type !== 'admin') {
+    return (
+      <Layout>
+        <div className="p-6">
+          <div className="text-center py-12">
+            <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Acesso Restrito
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Apenas clientes podem visualizar freelancers. Como freelancer, você pode encontrar oportunidades na seção correspondente.
+            </p>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
   const [freelancers, setFreelancers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -628,7 +647,7 @@ const Freelancers: React.FC = () => {
                           Enviar Mensagem
                         </Button>
                         <Button variant="outline" fullWidth icon={Briefcase}>
-                          Convidar para Job
+                          Convidar para Oportunidade
                         </Button>
                         <Button variant="ghost" fullWidth icon={Heart}>
                           Salvar Freelancer

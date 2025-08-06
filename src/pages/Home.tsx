@@ -54,7 +54,7 @@ const Home: React.FC = () => {
 
   const stats = [
     {
-      title: 'Jobs Ativos',
+      title: 'Oportunidades Ativas',
       value: jobs.length.toString(),
       icon: Briefcase,
       color: 'text-blue-600 dark:text-blue-400'
@@ -94,7 +94,7 @@ const Home: React.FC = () => {
                 size="lg"
                 icon={profile?.user_type === 'client' ? Users : Briefcase}
               >
-                {profile?.user_type === 'client' ? 'Contratar Freelancer' : 'Ver Jobs Disponíveis'}
+                {profile?.user_type === 'client' ? 'Contratar Freelancer' : 'Ver Oportunidades Disponíveis'}
               </Button>
               {profile?.user_type === 'client' && (
                 <Button 
@@ -103,7 +103,7 @@ const Home: React.FC = () => {
                   icon={Plus}
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20"
                 >
-                  Publicar Job
+                  Publicar Oportunidade
                 </Button>
               )}
             </div>
@@ -134,7 +134,7 @@ const Home: React.FC = () => {
         {/* Busca e Filtros */}
         <Card>
           <CardHeader>
-            <CardTitle>Encontre o Job Perfeito</CardTitle>
+            <CardTitle>Encontre a Oportunidade Perfeita</CardTitle>
             <CardDescription>
               Use os filtros abaixo para encontrar oportunidades que combinam com você
             </CardDescription>
@@ -171,7 +171,7 @@ const Home: React.FC = () => {
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Jobs em Destaque
+              Oportunidades em Destaque
             </h2>
             <Button variant="outline" size="sm">
               Ver todos
@@ -209,7 +209,7 @@ const Home: React.FC = () => {
                   location={job.location || undefined}
                   postedAt={job.created_at}
                   proposalsCount={0} // TODO: Implementar contagem de propostas
-                  onClick={() => console.log('Ver job:', job.id)}
+                  onClick={() => console.log('Ver oportunidade:', job.id)}
                 />
               ))}
             </div>
@@ -217,11 +217,11 @@ const Home: React.FC = () => {
             <Card className="text-center py-12">
               <CardContent>
                 <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <CardTitle className="mb-2">Nenhum job encontrado</CardTitle>
+                <CardTitle className="mb-2">Nenhuma oportunidade encontrada</CardTitle>
                 <CardDescription>
                   {searchTerm || selectedCategory
                     ? 'Tente ajustar seus filtros de busca'
-                    : 'Ainda não há jobs disponíveis. Volte em breve!'}
+                    : 'Ainda não há oportunidades disponíveis. Volte em breve!'}
                 </CardDescription>
               </CardContent>
             </Card>
@@ -248,7 +248,7 @@ const Home: React.FC = () => {
                     {category}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {Math.floor(Math.random() * 50) + 10} jobs
+                    {Math.floor(Math.random() * 50) + 10} oportunidades
                   </div>
                 </button>
               ))}

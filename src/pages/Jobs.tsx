@@ -31,6 +31,25 @@ interface FilterState {
 
 const Jobs: React.FC = () => {
   const { user, profile } = useAuth()
+  
+  // Verificar se o usuário é freelancer - apenas freelancers podem ver oportunidades
+  if (profile && profile.user_type !== 'freelancer' && profile.user_type !== 'admin') {
+    return (
+      <Layout>
+        <div className="p-6">
+          <div className="text-center py-12">
+            <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Acesso Restrito
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Apenas freelancers podem visualizar oportunidades. Como cliente, você pode encontrar freelancers na seção correspondente.
+            </p>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -191,7 +210,7 @@ const Jobs: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Encontre Jobs Incríveis
+              Encontre Oportunidades Incríveis
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
               {filteredJobs.length} {filteredJobs.length === 1 ? 'oportunidade encontrada' : 'oportunidades encontradas'}
@@ -199,7 +218,7 @@ const Jobs: React.FC = () => {
           </div>
           {profile?.user_type === 'client' && (
             <Button icon={Plus} size="lg">
-              Publicar Novo Job
+              Publicar Nova Oportunidade
             </Button>
           )}
         </div>
@@ -210,7 +229,7 @@ const Jobs: React.FC = () => {
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <Input
-                placeholder="Buscar jobs por título, descrição ou palavras-chave..."
+                placeholder="Buscar oportunidades por título, descrição ou palavras-chave..."
                 leftIcon={Search}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -304,7 +323,7 @@ const Jobs: React.FC = () => {
                     />
                   </div>
 
-                  {/* Tipo de Job */}
+                  {/* Tipo de Oportunidade */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Tipo de Trabalho
@@ -347,7 +366,7 @@ const Jobs: React.FC = () => {
           )}
         </div>
 
-        {/* Lista de Jobs */}
+        {/* Lista de Oportunidades */}
         {loading ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[...Array(6)].map((_, index) => (
@@ -387,11 +406,11 @@ const Jobs: React.FC = () => {
           <Card className="text-center py-12">
             <CardContent>
               <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <CardTitle className="mb-2">Nenhum job encontrado</CardTitle>
+              <CardTitle className="mb-2">Nenhuma oportunidade encontrada</CardTitle>
               <CardDescription>
                 {activeFiltersCount > 0
                   ? 'Tente ajustar seus filtros de busca'
-                  : 'Ainda não há jobs disponíveis. Volte em breve!'}
+                  : 'Ainda não há oportunidades disponíveis. Volte em breve!'}
               </CardDescription>
               {activeFiltersCount > 0 && (
                 <Button
@@ -406,7 +425,7 @@ const Jobs: React.FC = () => {
           </Card>
         )}
 
-        {/* Modal de Detalhes do Job */}
+        {/* Modal de Detalhes da Oportunidade */}
         {showJobDetails && selectedJob && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -528,7 +547,7 @@ const Jobs: React.FC = () => {
                           Enviar Proposta
                         </Button>
                         <Button variant="outline" fullWidth>
-                          Salvar Job
+                          Salvar Oportunidade
                         </Button>
                       </div>
                     )}

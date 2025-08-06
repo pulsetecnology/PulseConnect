@@ -1,10 +1,7 @@
 # TODO:
 
-- [x] 15: Criar README.md principal em português pt-BR com visão geral do projeto (priority: High)
-- [x] 16: Criar README_FUNCIONAL.md com requisitos funcionais detalhados (priority: High)
-- [x] 17: Criar README_NAOFUNCIONAL.md com requisitos não funcionais (priority: High)
-- [x] 18: Verificar e corrigir estrutura do banco de dados no Supabase (priority: High)
-- [x] 19: Corrigir queries SQL que retornam erro 400/406 (priority: High)
-- [x] 20: Implementar tratamento para email não confirmado na autenticação (priority: Medium)
-- [x] 21: Corrigir carregamento de dados de perfil pré-preenchidos (priority: Medium)
-- [x] 22: Testar e validar todas as correções implementadas (priority: Medium)
+- [x] 23: Implementar diferenciação de dashboards: Clientes veem apenas Freelancers, Freelancers veem apenas Oportunidades (priority: High)
+- [x] 24: Substituir todos os termos 'Job' por 'Oportunidade' na interface visual (priority: High)
+- [x] 25: Corrigir exibição do tipo de usuário no rodapé do sidebar (Cliente/Freelancer) (priority: High)
+- [x] 26: Atualizar navegação e menus conforme regras de visibilidade por tipo de usuário (priority: Medium)
+- [x] 27: Testar e validar as mudanças de diferenciação por tipo de usuário (priority: Medium)
