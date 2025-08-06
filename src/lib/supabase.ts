@@ -3,7 +3,34 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vzwfslydblfmodpwlnbz.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6d2ZzbHlkYmxmbW9kcHdsbmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NDA3MTUsImV4cCI6MjA3MDAxNjcxNX0.VAo7mOBnEvdFchFfBzprkASVHBDCZI_9JG8-AdWdLcM'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Verificar se as variáveis de ambiente estão definidas
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Variáveis de ambiente do Supabase não encontradas!')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+})
+
+// Função para testar conectividade
+export const testSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('user_profiles').select('count', { count: 'exact', head: true })
+    if (error) {
+      console.error('Erro de conectividade com Supabase:', error)
+      return false
+    }
+    console.log('Conexão com Supabase estabelecida com sucesso')
+    return true
+  } catch (error) {
+    console.error('Falha na conexão com Supabase:', error)
+    return false
+  }
+}
 
 // Tipos para as tabelas do banco de dados
 export interface UserProfile {
@@ -87,11 +114,22 @@ export const getCurrentUser = async () => {
 
 // Funções para gerenciar perfis de usuário
 export const getUserProfile = async (userId: string) => {
-  return await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+    
+    if (error) {
+      console.error('Erro ao buscar perfil do usuário:', error)
+    }
+    
+    return { data, error }
+  } catch (error) {
+    console.error('Erro na função getUserProfile:', error)
+    return { data: null, error }
+  }
 }
 
 export const getUserProfiles = async () => {
@@ -102,12 +140,22 @@ export const getUserProfiles = async () => {
 }
 
 export const createUserProfile = async (profile: Partial<UserProfile>) => {
-  const { data, error } = await supabase
-    .from('user_profiles')
-    .insert([profile])
-    .select()
-    .single()
-  return { data, error }
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .insert([profile])
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Erro ao criar perfil do usuário:', error)
+    }
+    
+    return { data, error }
+  } catch (error) {
+    console.error('Erro na função createUserProfile:', error)
+    return { data: null, error }
+  }
 }
 
 export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>) => {

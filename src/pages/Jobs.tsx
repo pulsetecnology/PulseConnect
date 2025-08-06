@@ -17,7 +17,8 @@ import {
   X,
   Plus
 } from 'lucide-react'
-import { getJobs, Job } from '../lib/supabase'
+import { hybridDataService } from '../lib/hybridService'
+import type { Job } from '../lib/supabase'
 
 interface FilterState {
   category: string
@@ -30,10 +31,10 @@ interface FilterState {
 }
 
 const Jobs: React.FC = () => {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   
   // Verificar se o usuário é freelancer - apenas freelancers podem ver oportunidades
-  if (profile && profile.user_type !== 'freelancer' && profile.user_type !== 'admin') {
+  if (user && user.user_type !== 'freelancer' && user.user_type !== 'admin') {
     return (
       <Layout>
         <div className="p-6">
@@ -110,14 +111,11 @@ const Jobs: React.FC = () => {
   const loadJobs = async () => {
     try {
       setLoading(true)
-      const { data, error } = await getJobs()
-      if (error) {
-        console.error('Erro ao carregar jobs:', error)
-      } else {
-        setJobs(data || [])
-      }
+      const data = await hybridDataService.getJobs()
+      setJobs(data || [])
     } catch (error) {
-      console.error('Erro ao carregar jobs:', error)
+      console.error('Erro ao carregar oportunidades:', error)
+      setJobs([])
     } finally {
       setLoading(false)
     }
@@ -216,7 +214,7 @@ const Jobs: React.FC = () => {
               {filteredJobs.length} {filteredJobs.length === 1 ? 'oportunidade encontrada' : 'oportunidades encontradas'}
             </p>
           </div>
-          {profile?.user_type === 'client' && (
+          {user?.user_type === 'client' && (
             <Button icon={Plus} size="lg">
               Publicar Nova Oportunidade
             </Button>
@@ -541,7 +539,7 @@ const Jobs: React.FC = () => {
                     </Card>
 
                     {/* Ações */}
-                    {profile?.user_type === 'freelancer' && selectedJob.status === 'open' && (
+                    {user?.user_type === 'freelancer' && selectedJob.status === 'open' && (
                       <div className="space-y-3">
                         <Button fullWidth size="lg">
                           Enviar Proposta

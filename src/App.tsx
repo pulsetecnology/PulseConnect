@@ -1,5 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { Toaster } from 'sonner'
+import { Loader2 } from 'lucide-react'
+import { ConnectionError } from './components/ConnectionError'
+import { OfflineMode } from './components/OfflineMode'
+import React from 'react'
+
+// Pages
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -15,17 +22,29 @@ import './index.css'
 
 // Componente para proteger rotas que precisam de autenticação
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth()
+  const { user, loading, connectionError, isOnline } = useAuth()
+
+  if (connectionError && isOnline) {
+    return <ConnectionError onRetry={() => window.location.reload()} />
+  }
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
   
-  return user ? <>{children}</> : <Navigate to="/login" replace />
+  if (user) {
+    return !isOnline ? (
+      <OfflineMode>{children}</OfflineMode>
+    ) : (
+      <>{children}</>
+    )
+  }
+  
+  return <Navigate to="/login" replace />
 }
 
 // Componente para rotas públicas (redireciona se já estiver logado)
@@ -34,13 +53,17 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
   
-  return user ? <Navigate to="/" replace /> : <>{children}</>
+  if (user) {
+    return <Navigate to="/" replace />
+  }
+  
+  return <>{children}</>
 }
 
 function App() {
@@ -48,7 +71,8 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-          <Routes>
+          <Toaster position="top-right" richColors />
+        <Routes>
             {/* Rotas públicas */}
             <Route 
               path="/login" 

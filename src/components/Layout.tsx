@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../hooks/useTheme'
+import ConnectionStatus, { ConnectionErrorBanner } from './ConnectionStatus'
+import OfflineToggle from './OfflineToggle'
 import {
   Home,
   Briefcase,
@@ -24,7 +26,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, profile, signOut } = useAuth()
+  const { user, signOut, connectionError } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
@@ -39,8 +41,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       { name: 'Avaliações', href: '/reviews', icon: Star },
     ]
 
+    const userType = user?.user_type
+
     // Clientes veem apenas Freelancers (não veem Oportunidades)
-    if (profile?.user_type === 'client') {
+    if (userType === 'client') {
       return [
         ...baseItems.slice(0, 1), // Início
         { name: 'Freelancers', href: '/freelancers', icon: Users },
@@ -49,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
     
     // Freelancers veem apenas Oportunidades (não veem outros Freelancers)
-    if (profile?.user_type === 'freelancer') {
+    if (userType === 'freelancer') {
       return [
         ...baseItems.slice(0, 1), // Início
         { name: 'Oportunidades', href: '/jobs', icon: Briefcase },
@@ -161,12 +165,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {user?.user_metadata?.full_name || user?.email}
+                  {user?.full_name || 'Usuário'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                  {profile?.user_type === 'client' ? 'Cliente' : 
-                   profile?.user_type === 'freelancer' ? 'Freelancer' : 
-                   profile?.user_type === 'admin' ? 'Administrador' : 'Usuário'}
+                  {user?.user_type === 'client' ? 'Cliente' : 
+                   user?.user_type === 'freelancer' ? 'Freelancer' : 
+                   user?.user_type === 'admin' ? 'Administrador' : 'Usuário'}
                 </p>
               </div>
             </div>
@@ -244,9 +248,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Page Content */}
         <main className="flex-1">
+          <ConnectionErrorBanner error={connectionError} />
           {children}
         </main>
       </div>
+      
+      {/* Connection Status Indicator */}
+      <ConnectionStatus />
+      
+      {/* Offline Mode Toggle */}
+      <OfflineToggle />
     </div>
   )
 }

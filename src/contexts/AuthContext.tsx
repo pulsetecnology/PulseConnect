@@ -1,18 +1,19 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase, getUserProfile, createUserProfile, UserProfile } from '../lib/supabase'
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { hybridAuthService, onConnectionChange } from '../lib/hybridService';
+import type { UserProfile } from '../lib/supabase';
 
 interface AuthContextType {
-  user: User | null
-  profile: UserProfile | null
-  loading: boolean
-  signInWithGoogle: () => Promise<void>
-  signInWithEmail: (email: string, password: string) => Promise<void>
-  signUpWithEmail: (email: string, password: string, userData: { full_name: string; user_type: 'client' | 'freelancer' }) => Promise<void>
-  signOut: () => Promise<void>
-  updateProfile: (updates: Partial<UserProfile>) => Promise<void>
-  resetPassword: (email: string) => Promise<void>
-  resendConfirmation: (email: string) => Promise<void>
+  user: UserProfile | null;
+  loading: boolean;
+  signInWithGoogle: () => Promise<{ error?: string }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<{ error?: string }>;
+  resetPassword: (email: string) => Promise<{ error?: string }>;
+  resendConfirmation: (email: string) => Promise<{ error?: string }>;
+  isOnline: boolean;
+  connectionError: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -25,181 +26,185 @@ export const useAuth = () => {
   return context
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isOnline, setIsOnline] = useState(true);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Verificar se há um usuário logado
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        setUser(session.user)
-        await loadUserProfile(session.user.id)
+    let mounted = true;
+    
+    // Listen to connection changes
+    const unsubscribeConnection = onConnectionChange((online) => {
+      if (mounted) {
+        setIsOnline(online);
+        setConnectionError(online ? null : 'Sem conexão com o servidor. Funcionando em modo offline.');
       }
-      setLoading(false)
-    }
-
-    getInitialSession()
-
-    // Escutar mudanças na autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          setUser(session.user)
-          await loadUserProfile(session.user.id)
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null)
-          setProfile(null)
-        }
-        setLoading(false)
+    });
+    
+    // Listen to auth state changes
+    const unsubscribeAuth = hybridAuthService.onAuthStateChange((user) => {
+      if (mounted) {
+        setUser(user);
+        setLoading(false);
       }
-    )
-
-    return () => subscription.unsubscribe()
+    });
+    
+    return () => {
+      mounted = false;
+      unsubscribeConnection();
+      unsubscribeAuth();
+    };
   }, [])
 
-  const loadUserProfile = async (userId: string) => {
+  // Auth methods using hybrid service
+  const handleSignInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      const { data: existingProfile, error } = await getUserProfile(userId)
+      const result = await hybridAuthService.signInWithGoogle();
+      return { error: result.error };
+    } catch (error: any) {
+      console.error('Erro no login com Google:', error);
       
-      if (error && error.code === 'PGRST116') {
-        // Perfil não existe, criar um novo
-        const { data: newProfile } = await createUserProfile({
-          user_id: userId,
-          user_type: 'freelancer'
-        })
-        setProfile(newProfile)
-      } else if (existingProfile) {
-        setProfile(existingProfile)
+      // Tratar erros específicos de tabela não encontrada
+      if (error.message?.includes('404') || error.message?.includes('Not Found')) {
+        setConnectionError('Problema de conectividade. Funcionando em modo offline.');
+        return { error: 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.' };
       }
-    } catch (error) {
-      console.error('Erro ao carregar perfil:', error)
-    }
-  }
-
-  const handleSignInWithGoogle = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
-      if (error) throw error
-    } catch (error) {
-      console.error('Erro no login com Google:', error)
-      throw error
-    }
-  }
-
-  const handleSignInWithEmail = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-      if (error) {
-        if (error.message === 'Email not confirmed') {
-          throw new Error('Email não confirmado. Verifique sua caixa de entrada e clique no link de confirmação.')
-        }
-        throw error
+      
+      // Tratar erros de rede
+      if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        setConnectionError('Sem conexão com o servidor. Funcionando em modo offline.');
+        return { error: 'Problema de conexão. Verifique sua internet e tente novamente.' };
       }
-    } catch (error) {
-      console.error('Erro no login com email:', error)
-      throw error
+      
+      return { error: error.message || 'Erro ao fazer login com Google' };
     }
-  }
+  };
 
-  const handleSignUpWithEmail = async (email: string, password: string, userData: { full_name: string; user_type: 'client' | 'freelancer' }) => {
+  const handleSignInWithEmail = async (email: string, password: string): Promise<{ error?: string }> => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: userData.full_name
-          }
-        }
-      })
+      const result = await hybridAuthService.signInWithEmail(email, password);
+      return { error: result.error };
+    } catch (error: any) {
+      console.error('Erro no login com email:', error);
       
-      if (error) throw error
-      
-      // Criar perfil do usuário após o registro
-      if (data.user) {
-        await createUserProfile({
-          user_id: data.user.id,
-          full_name: userData.full_name,
-          user_type: userData.user_type
-        })
+      // Tratar erros específicos de tabela não encontrada
+      if (error.message?.includes('404') || error.message?.includes('Not Found')) {
+        setConnectionError('Problema de conectividade. Funcionando em modo offline.');
+        return { error: 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.' };
       }
-    } catch (error) {
-      console.error('Erro no registro:', error)
-      throw error
-    }
-  }
-
-  const handleResetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
-      })
-      if (error) throw error
-    } catch (error) {
-      console.error('Erro ao resetar senha:', error)
-      throw error
-    }
-  }
-
-  const handleResendConfirmation = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
-      if (error) throw error
-    } catch (error) {
-      console.error('Erro ao reenviar confirmação:', error)
-      throw error
-    }
-  }
-
-  const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-    } catch (error) {
-      console.error('Erro no logout:', error)
-      throw error
-    }
-  }
-
-  const handleUpdateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user || !profile) return
-    
-    try {
-      const { data: updatedProfile, error } = await supabase
-        .from('user_profiles')
-        .update(updates)
-        .eq('user_id', user.id)
-        .select()
-        .single()
       
-      if (error) throw error
-      setProfile(updatedProfile)
-    } catch (error) {
-      console.error('Erro ao atualizar perfil:', error)
-      throw error
+      // Tratar erros de rede
+      if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        setConnectionError('Sem conexão com o servidor. Funcionando em modo offline.');
+        return { error: 'Problema de conexão. Verifique sua internet e tente novamente.' };
+      }
+      
+      // Tratar erros de autenticação específicos
+      if (error.message?.includes('Invalid login credentials')) {
+        return { error: 'Email ou senha incorretos.' };
+      }
+      
+      return { error: error.message || 'Erro ao fazer login' };
     }
-  }
+  };
+
+  const handleSignUpWithEmail = async (email: string, password: string): Promise<{ error?: string }> => {
+    try {
+      const result = await hybridAuthService.signUpWithEmail(email, password);
+      return { error: result.error };
+    } catch (error: any) {
+      console.error('Erro no cadastro com email:', error);
+      
+      // Tratar erros específicos de tabela não encontrada
+      if (error.message?.includes('404') || error.message?.includes('Not Found')) {
+        setConnectionError('Problema de conectividade. Funcionando em modo offline.');
+        return { error: 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.' };
+      }
+      
+      // Tratar erros de rede
+      if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        setConnectionError('Sem conexão com o servidor. Funcionando em modo offline.');
+        return { error: 'Problema de conexão. Verifique sua internet e tente novamente.' };
+      }
+      
+      // Tratar erros de cadastro específicos
+      if (error.message?.includes('User already registered')) {
+        return { error: 'Este email já está cadastrado.' };
+      }
+      
+      return { error: error.message || 'Erro ao criar conta' };
+    }
+  };
+
+  const handleSignOut = async (): Promise<void> => {
+    try {
+      await hybridAuthService.signOut();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
+  const handleUpdateProfile = async (updates: Partial<UserProfile>): Promise<{ error?: string }> => {
+    try {
+      const result = await hybridAuthService.updateProfile(updates);
+      return { error: result.error };
+    } catch (error: any) {
+      console.error('Erro ao atualizar perfil:', error);
+      
+      // Tratar erros específicos de tabela não encontrada
+      if (error.message?.includes('404') || error.message?.includes('Not Found')) {
+        setConnectionError('Problema de conectividade. Funcionando em modo offline.');
+        return { error: 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.' };
+      }
+      
+      // Tratar erros de rede
+      if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        setConnectionError('Sem conexão com o servidor. Funcionando em modo offline.');
+        return { error: 'Problema de conexão. Verifique sua internet e tente novamente.' };
+      }
+      
+      return { error: error.message || 'Erro ao atualizar perfil' };
+    }
+  };
+
+  const handleResetPassword = async (email: string): Promise<{ error?: string }> => {
+    try {
+      const result = await hybridAuthService.resetPassword(email);
+      return { error: result.error };
+    } catch (error: any) {
+      console.error('Erro ao resetar senha:', error);
+      
+      // Tratar erros de rede
+      if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        setConnectionError('Sem conexão com o servidor. Funcionando em modo offline.');
+        return { error: 'Problema de conexão. Verifique sua internet e tente novamente.' };
+      }
+      
+      return { error: error.message || 'Erro ao enviar email de recuperação' };
+    }
+  };
+
+  const handleResendConfirmation = async (email: string): Promise<{ error?: string }> => {
+    try {
+      const result = await hybridAuthService.resendConfirmation(email);
+      return { error: result.error };
+    } catch (error: any) {
+      console.error('Erro ao reenviar confirmação:', error);
+      
+      // Tratar erros de rede
+      if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        setConnectionError('Sem conexão com o servidor. Funcionando em modo offline.');
+        return { error: 'Problema de conexão. Verifique sua internet e tente novamente.' };
+      }
+      
+      return { error: error.message || 'Erro ao reenviar confirmação' };
+    }
+  };
 
   const value = {
     user,
-    profile,
     loading,
     signInWithGoogle: handleSignInWithGoogle,
     signInWithEmail: handleSignInWithEmail,
@@ -207,12 +212,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut: handleSignOut,
     updateProfile: handleUpdateProfile,
     resetPassword: handleResetPassword,
-    resendConfirmation: handleResendConfirmation
-  }
+    resendConfirmation: handleResendConfirmation,
+    isOnline,
+    connectionError
+  };
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  )
+  );
 }

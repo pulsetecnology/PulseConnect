@@ -20,7 +20,8 @@ import {
   Eye,
   CheckCircle
 } from 'lucide-react'
-import { getUserProfiles, UserProfile } from '../lib/supabase'
+import { hybridDataService } from '../lib/hybridService'
+import type { UserProfile } from '../lib/supabase'
 
 interface FilterState {
   category: string
@@ -33,10 +34,10 @@ interface FilterState {
 }
 
 const Freelancers: React.FC = () => {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   
   // Verificar se o usuário é cliente - apenas clientes podem ver freelancers
-  if (profile && profile.user_type !== 'client' && profile.user_type !== 'admin') {
+  if (user && user.user_type !== 'client' && user.user_type !== 'admin') {
     return (
       <Layout>
         <div className="p-6">
@@ -105,16 +106,13 @@ const Freelancers: React.FC = () => {
   const loadFreelancers = async () => {
     try {
       setLoading(true)
-      const { data, error } = await getUserProfiles()
-      if (error) {
-        console.error('Erro ao carregar freelancers:', error)
-      } else {
-        // Filtrar apenas freelancers
-        const freelancerProfiles = (data || []).filter(profile => profile.user_type === 'freelancer')
-        setFreelancers(freelancerProfiles)
-      }
+      const data = await hybridDataService.getUserProfiles()
+      // Filtrar apenas freelancers
+      const freelancerProfiles = (data || []).filter(profile => profile.user_type === 'freelancer')
+      setFreelancers(freelancerProfiles)
     } catch (error) {
       console.error('Erro ao carregar freelancers:', error)
+      setFreelancers([])
     } finally {
       setLoading(false)
     }
@@ -641,7 +639,7 @@ const Freelancers: React.FC = () => {
                     </Card>
 
                     {/* Ações */}
-                    {profile?.user_type === 'client' && (
+                    {user?.user_type === 'client' && (
                       <div className="space-y-3">
                         <Button fullWidth size="lg" icon={MessageCircle}>
                           Enviar Mensagem

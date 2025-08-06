@@ -43,10 +43,7 @@ const Register: React.FC = () => {
       setError('')
       setSuccess('')
       
-      await signUpWithEmail(formData.email, formData.password, {
-        full_name: formData.full_name,
-        user_type: formData.user_type
-      })
+      await signUpWithEmail(formData.email, formData.password)
       
       setSuccess('Conta criada com sucesso! Verifique seu email para confirmar a conta.')
       

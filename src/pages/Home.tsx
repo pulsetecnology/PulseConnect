@@ -8,7 +8,7 @@ import { Search, Briefcase, Users, TrendingUp, MapPin, Clock, Plus } from 'lucid
 import { getJobs, Job } from '../lib/supabase'
 
 const Home: React.FC = () => {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -80,10 +80,10 @@ const Home: React.FC = () => {
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
           <div className="max-w-4xl">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              Olá, {user?.user_metadata?.full_name?.split(' ')[0] || 'Usuário'}! 👋
+              Olá, {user?.full_name?.split(' ')[0] || 'Usuário'}! 👋
             </h1>
             <p className="text-xl opacity-90 mb-6">
-              {profile?.user_type === 'client' 
+              {user?.user_type === 'client' 
                 ? 'Encontre os melhores freelancers para seus projetos'
                 : 'Descubra oportunidades incríveis para sua carreira'
               }
@@ -92,11 +92,11 @@ const Home: React.FC = () => {
               <Button 
                 variant="secondary" 
                 size="lg"
-                icon={profile?.user_type === 'client' ? Users : Briefcase}
+                icon={user?.user_type === 'client' ? Users : Briefcase}
               >
-                {profile?.user_type === 'client' ? 'Contratar Freelancer' : 'Ver Oportunidades Disponíveis'}
+                {user?.user_type === 'client' ? 'Contratar Freelancer' : 'Ver Oportunidades Disponíveis'}
               </Button>
-              {profile?.user_type === 'client' && (
+              {user?.user_type === 'client' && (
                 <Button 
                   variant="outline" 
                   size="lg"

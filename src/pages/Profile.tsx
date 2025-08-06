@@ -42,7 +42,7 @@ interface RecentActivity {
 }
 
 function Profile() {
-  const { user, profile, updateProfile } = useAuth()
+  const { user, updateProfile } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<UserStats>({
@@ -54,12 +54,12 @@ function Profile() {
   })
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [editForm, setEditForm] = useState({
-    full_name: profile?.full_name || '',
-    bio: profile?.bio || '',
-    location: profile?.location || '',
+    full_name: user?.full_name || '',
+    bio: user?.bio || '',
+    location: user?.location || '',
 
-    skills: profile?.skills?.join(', ') || '',
-    hourly_rate: profile?.hourly_rate?.toString() || ''
+    skills: user?.skills?.join(', ') || '',
+    hourly_rate: user?.hourly_rate?.toString() || ''
   })
 
   useEffect(() => {
@@ -70,17 +70,17 @@ function Profile() {
   }, [user])
 
   useEffect(() => {
-    if (profile) {
+    if (user) {
       setEditForm({
-        full_name: profile.full_name || '',
-        bio: profile.bio || '',
-        location: profile.location || '',
+        full_name: user.full_name || '',
+        bio: user.bio || '',
+        location: user.location || '',
 
-        skills: profile.skills?.join(', ') || '',
-        hourly_rate: profile.hourly_rate?.toString() || ''
+        skills: user.skills?.join(', ') || '',
+        hourly_rate: user.hourly_rate?.toString() || ''
       })
     }
-  }, [profile])
+  }, [user])
 
   const loadUserStats = async () => {
     try {
@@ -230,12 +230,12 @@ function Profile() {
                   onClick={() => {
                     setIsEditing(false)
                     setEditForm({
-                      full_name: profile?.full_name || '',
-                      bio: profile?.bio || '',
-                      location: profile?.location || '',
+                      full_name: user?.full_name || '',
+                      bio: user?.bio || '',
+                      location: user?.location || '',
 
-                      skills: profile?.skills?.join(', ') || '',
-                      hourly_rate: profile?.hourly_rate?.toString() || ''
+                      skills: user?.skills?.join(', ') || '',
+                      hourly_rate: user?.hourly_rate?.toString() || ''
                     })
                   }}
                 >
@@ -261,19 +261,19 @@ function Profile() {
               <CardContent>
                 <div className="flex items-center mb-6">
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4">
-                    {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                    {user?.full_name?.charAt(0) || 'U'}
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      {profile?.full_name || 'Nome não informado'}
+                      {user?.full_name || 'Nome não informado'}
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {user?.email}
+                      {user?.id || 'Usuário'}
                     </p>
-                    {profile?.location && (
+                    {user?.location && (
                       <div className="flex items-center text-gray-600 dark:text-gray-400">
                         <MapPin className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{profile.location}</span>
+                        <span className="text-sm">{user.location}</span>
                       </div>
                     )}
                   </div>
@@ -292,7 +292,7 @@ function Profile() {
                       />
                     ) : (
                       <p className="text-gray-900 dark:text-white">
-                        {profile?.full_name || 'Não informado'}
+                        {user?.full_name || 'Não informado'}
                       </p>
                     )}
                   </div>
@@ -309,7 +309,7 @@ function Profile() {
                       />
                     ) : (
                       <p className="text-gray-900 dark:text-white">
-                        {profile?.location || 'Não informado'}
+                        {user?.location || 'Não informado'}
                       </p>
                     )}
                   </div>
@@ -327,8 +327,8 @@ function Profile() {
                       />
                     ) : (
                       <p className="text-gray-900 dark:text-white">
-                        {profile?.hourly_rate
-                          ? formatCurrency(profile.hourly_rate)
+                        {user?.hourly_rate
+                          ? formatCurrency(user.hourly_rate)
                           : 'Não informado'}
                       </p>
                     )}
@@ -348,7 +348,7 @@ function Profile() {
                     />
                   ) : (
                     <p className="text-gray-900 dark:text-white">
-                      {profile?.bio || 'Nenhuma biografia adicionada'}
+                      {user?.bio || 'Nenhuma biografia adicionada'}
                     </p>
                   )}
                 </div>
@@ -365,8 +365,8 @@ function Profile() {
                     />
                   ) : (
                     <div className="flex flex-wrap gap-2">
-                      {profile?.skills?.length ? (
-                        profile.skills.map((skill, index) => (
+                      {user?.skills?.length ? (
+                        user.skills.map((skill, index) => (
                           <span
                             key={index}
                             className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm"
