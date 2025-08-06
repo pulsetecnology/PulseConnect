@@ -114,9 +114,8 @@ function Proposals() {
         .insert({
           job_id: selectedJob.id,
           freelancer_id: user.id,
-          client_id: selectedJob.client_id,
-          amount: parseFloat(newProposal.amount),
-          delivery_time: parseInt(newProposal.delivery_time),
+          proposed_price: parseFloat(newProposal.amount),
+          delivery_days: parseInt(newProposal.delivery_time),
           message: newProposal.message,
           status: 'pending'
         })

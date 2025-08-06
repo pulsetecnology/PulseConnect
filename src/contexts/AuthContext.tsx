@@ -12,6 +12,7 @@ interface AuthContextType {
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>
   resetPassword: (email: string) => Promise<void>
+  resendConfirmation: (email: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -99,7 +100,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password
       })
-      if (error) throw error
+      if (error) {
+        if (error.message === 'Email not confirmed') {
+          throw new Error('Email não confirmado. Verifique sua caixa de entrada e clique no link de confirmação.')
+        }
+        throw error
+      }
     } catch (error) {
       console.error('Erro no login com email:', error)
       throw error
@@ -146,6 +152,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const handleResendConfirmation = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+      if (error) throw error
+    } catch (error) {
+      console.error('Erro ao reenviar confirmação:', error)
+      throw error
+    }
+  }
+
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut()
@@ -184,7 +206,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUpWithEmail: handleSignUpWithEmail,
     signOut: handleSignOut,
     updateProfile: handleUpdateProfile,
-    resetPassword: handleResetPassword
+    resetPassword: handleResetPassword,
+    resendConfirmation: handleResendConfirmation
   }
 
   return (

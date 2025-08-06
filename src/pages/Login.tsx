@@ -1,14 +1,17 @@
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { LogIn, AlertCircle, Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { LogIn, AlertCircle, Mail, Lock, Eye, EyeOff, RefreshCw } from 'lucide-react'
 
 const Login: React.FC = () => {
-  const { signInWithGoogle, signInWithEmail } = useAuth()
+  const { signInWithGoogle, signInWithEmail, resendConfirmation } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loginMethod, setLoginMethod] = useState<'email' | 'google'>('email')
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -61,8 +64,13 @@ const Login: React.FC = () => {
       console.error('Erro no login:', error)
       if (error.message?.includes('Invalid login credentials')) {
         setError('Email ou senha incorretos.')
+        setShowResendConfirmation(false)
+      } else if (error.message?.includes('Email not confirmed')) {
+        setError('Seu email ainda não foi confirmado. Verifique sua caixa de entrada ou reenvie o email de confirmação.')
+        setShowResendConfirmation(true)
       } else {
         setError('Erro ao fazer login. Tente novamente.')
+        setShowResendConfirmation(false)
       }
     } finally {
       setLoading(false)
@@ -74,6 +82,27 @@ const Login: React.FC = () => {
       ...formData,
       [e.target.name]: e.target.value
     })
+  }
+
+  const handleResendConfirmation = async () => {
+    if (!formData.email) {
+      setError('Por favor, insira seu email primeiro.')
+      return
+    }
+
+    try {
+      setResendLoading(true)
+      setError('')
+      await resendConfirmation(formData.email)
+      setResendSuccess(true)
+      setShowResendConfirmation(false)
+      setTimeout(() => setResendSuccess(false), 5000)
+    } catch (error: any) {
+      console.error('Erro ao reenviar confirmação:', error)
+      setError('Erro ao reenviar email de confirmação. Tente novamente.')
+    } finally {
+      setResendLoading(false)
+    }
   }
 
   return (
@@ -97,9 +126,41 @@ const Login: React.FC = () => {
           <div className="space-y-6">
             {/* Mensagem de Erro */}
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center space-x-3">
-                <AlertCircle className="h-5 w-5 text-red-500" />
-                <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                  <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+                </div>
+                {showResendConfirmation && (
+                  <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-800">
+                    <button
+                      onClick={handleResendConfirmation}
+                      disabled={resendLoading}
+                      className="flex items-center space-x-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {resendLoading ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      <span>{resendLoading ? 'Reenviando...' : 'Reenviar email de confirmação'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Mensagem de Sucesso */}
+            {resendSuccess && (
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center space-x-3">
+                <div className="h-5 w-5 text-green-500 flex-shrink-0">
+                  <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="text-sm text-green-700 dark:text-green-400">
+                  Email de confirmação reenviado com sucesso! Verifique sua caixa de entrada.
+                </p>
               </div>
             )}
 

@@ -87,25 +87,25 @@ function Profile() {
       // Carregar estatísticas de jobs
       const { data: jobsData } = await supabase
         .from('jobs')
-        .select('id, status, budget')
-        .eq('client_id', user?.id)
+        .select('id, status, budget_min, budget_max')
+        .eq('creator_id', user?.id)
 
       // Carregar estatísticas de propostas
       const { data: proposalsData } = await supabase
         .from('proposals')
-        .select('id, status, amount')
+        .select('id, status, proposed_price')
         .eq('freelancer_id', user?.id)
 
       // Carregar avaliações
       const { data: reviewsData } = await supabase
         .from('reviews')
         .select('rating')
-        .eq('freelancer_id', user?.id)
+        .eq('reviewed_id', user?.id)
 
       const totalJobs = jobsData?.length || 0
       const completedJobs = jobsData?.filter(job => job.status === 'completed').length || 0
       const acceptedProposals = proposalsData?.filter(p => p.status === 'accepted') || []
-      const totalEarnings = acceptedProposals.reduce((sum, p) => sum + (p.amount || 0), 0)
+      const totalEarnings = acceptedProposals.reduce((sum, p) => sum + (p.proposed_price || 0), 0)
       const averageRating = reviewsData?.length 
         ? reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length 
         : 0

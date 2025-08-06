@@ -127,7 +127,7 @@ const Freelancers: React.FC = () => {
 
     // Filtro por avaliação
     const matchesRating = !filters.rating || 
-      (freelancer.rating && freelancer.rating >= parseFloat(filters.rating))
+      (freelancer.rating_avg && freelancer.rating_avg >= parseFloat(filters.rating))
 
     return matchesSearch && matchesCategory && matchesLocation && matchesHourlyRate && matchesRating
   })
@@ -191,11 +191,11 @@ const Freelancers: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center space-x-1">
-                {freelancer.rating && (
+                {freelancer.rating_avg && (
                   <>
                     <Star className="h-4 w-4 text-yellow-400 fill-current" />
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {freelancer.rating.toFixed(1)}
+                      {freelancer.rating_avg.toFixed(1)}
                     </span>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
                       ({freelancer.total_reviews || 0})
@@ -488,13 +488,13 @@ const Freelancers: React.FC = () => {
                             <span>{selectedFreelancer.location}</span>
                           </div>
                         )}
-                        {selectedFreelancer.rating && (
+                        {selectedFreelancer.rating_avg && (
                           <div className="flex items-center space-x-1">
                             <div className="flex items-center space-x-1">
-                              {renderStars(selectedFreelancer.rating)}
+                              {renderStars(selectedFreelancer.rating_avg)}
                             </div>
                             <span className="font-medium">
-                              {selectedFreelancer.rating.toFixed(1)} ({selectedFreelancer.total_reviews || 0} avaliações)
+                              {selectedFreelancer.rating_avg.toFixed(1)} ({selectedFreelancer.total_reviews || 0} avaliações)
                             </span>
                           </div>
                         )}

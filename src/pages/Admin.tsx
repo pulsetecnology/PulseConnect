@@ -173,7 +173,12 @@ function Admin() {
           id,
           email,
           created_at,
-          user_profiles(full_name, location, is_active)
+          user_profiles(
+            full_name,
+            location,
+            user_type,
+            is_active
+          )
         `)
         .order('created_at', { ascending: false })
         .limit(50)
@@ -214,7 +219,7 @@ function Admin() {
         .from('jobs')
         .select(`
           *,
-          user_profiles(full_name)
+          creator:user_profiles!jobs_creator_id_fkey(full_name)
         `)
         .order('created_at', { ascending: false })
         .limit(50)

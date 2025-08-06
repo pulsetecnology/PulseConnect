@@ -12,12 +12,15 @@ export interface UserProfile {
   full_name?: string
   bio?: string
   location?: string
+  phone?: string
   skills?: string[]
-  user_type: 'client' | 'freelancer'
+  user_type: 'client' | 'freelancer' | 'admin'
   avatar_url?: string
   title?: string
-  rating?: number
+  plan_type?: 'free' | 'premium'
+  rating_avg?: number
   hourly_rate?: number
+  jobs_completed?: number
   completed_projects?: number
   total_reviews?: number
   created_at: string

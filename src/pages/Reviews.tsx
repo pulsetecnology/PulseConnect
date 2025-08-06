@@ -22,8 +22,8 @@ import {
 interface Review {
   id: string
   job_id: string
-  client_id: string
-  freelancer_id: string
+  reviewer_id: string
+  reviewed_id: string
   rating: number
   comment: string
   created_at: string
@@ -31,11 +31,11 @@ interface Review {
     title: string
     category: string
   }
-  client?: {
+  reviewer?: {
     full_name: string
     avatar_url?: string
   }
-  freelancer?: {
+  reviewed?: {
     full_name: string
     avatar_url?: string
   }
@@ -76,18 +76,18 @@ function Reviews() {
         .select(`
           *,
           job:jobs(title, category),
-          client:user_profiles!reviews_client_id_fkey(full_name, avatar_url),
-          freelancer:user_profiles!reviews_freelancer_id_fkey(full_name, avatar_url)
+          reviewer:user_profiles!reviews_reviewer_id_fkey(full_name, avatar_url),
+          reviewed:user_profiles!reviews_reviewed_id_fkey(full_name, avatar_url)
         `)
         .order('created_at', { ascending: false })
 
       // Filtrar por tipo
       if (typeFilter === 'received') {
-        query = query.eq('freelancer_id', user?.id)
+        query = query.eq('reviewed_id', user?.id)
       } else if (typeFilter === 'given') {
-        query = query.eq('client_id', user?.id)
+        query = query.eq('reviewer_id', user?.id)
       } else {
-        query = query.or(`freelancer_id.eq.${user?.id},client_id.eq.${user?.id}`)
+        query = query.or(`reviewed_id.eq.${user?.id},reviewer_id.eq.${user?.id}`)
       }
 
       const { data, error } = await query
@@ -107,7 +107,7 @@ function Reviews() {
       const { data: receivedReviews, error } = await supabase
         .from('reviews')
         .select('rating, created_at')
-        .eq('freelancer_id', user?.id)
+        .eq('reviewed_id', user?.id)
 
       if (error) throw error
 
@@ -142,8 +142,8 @@ function Reviews() {
     const matchesSearch = 
       review.job?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       review.comment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.client?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      review.freelancer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+      review.reviewer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      review.reviewed?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesRating = ratingFilter === 'all' || review.rating.toString() === ratingFilter
     
@@ -383,8 +383,8 @@ function Reviews() {
             </Card>
           ) : (
             filteredReviews.map((review) => {
-              const isReceived = review.freelancer_id === user?.id
-              const reviewer = isReceived ? review.client : review.freelancer
+              const isReceived = review.reviewed_id === user?.id
+              const reviewer = isReceived ? review.reviewer : review.reviewed
               
               return (
                 <Card key={review.id} className="hover:shadow-lg transition-shadow">
